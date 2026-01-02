@@ -57,20 +57,30 @@ System must generate a summary of transcription using an LLM.
 ### NFR1: Performance
 
 - NFR1.1: The interface must remain responsive during file uploads or transcription process.
-- NFR1.2: System must handle up to 50mb uploads without browser crash.
+- NFR1.2: System must stream uploads and processing to avoid blocking the UI thread.
 
 ### NFR2: Security
 
 - NFR2.1: User files should be immediately discarded after processing and should not be stored on the server.
 - NFR2.2: System must validate file types & size before upload.
 
-### NFR3: Reliablity
+### NFR3: Reliability
 
 - NFR3.1: System must attempt to restore previous state after a refresh.
 
 ### NFR4: Usability
 
-- NFR4.1: System must provide real-time status updates during long-running proccess.
+- NFR4.1: System must provide real-time status updates during long-running process.
+
+### NFR5: Cost Efficiency
+
+- NFR5.1: AI calls should be minimized and explicit user-triggered.
+- NFR5.2: No background or automatic summarization.
+
+### NFR6: Observability
+
+- NFR6.1: System must surface clear error states to the user.
+- NFR6.2: Failures from external AI providers must be detectable.
 
 ---
 
