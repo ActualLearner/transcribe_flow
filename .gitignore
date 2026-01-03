@@ -1,0 +1,85 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Django
+*.log
+*.pot
+*.mo
+db.sqlite3
+media/
+staticfiles/
+
+# If your static files are generated into src/staticfiles/
+src/staticfiles/
+
+# Virtual Environments (root or inside src/)
+.env
+.venv
+venv/
+ENV/
+env.bak/
+env/
+src/.env
+src/.venv
+src/venv/
+src/ENV/
+src/env.bak/
+src/env/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker
+*.pid
+*.seed
+*.pid.lock
+
+# Docker Compose overrides
+docker-compose.override.yml
+docker-compose.override.*.yml
+
+# Local docker volumes (if you map them here)
+volumes/
+
+# Coverage / Testing
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+htmlcov/
+test-results/
+junit.xml
+
+# MyPy / Pyre / Pytype
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+
+# Pytest
+.pytest_cache/
+
+# System
+.DS_Store
+Thumbs.db
+
+# Project-specific
+# (exclude local settings overrides)
+src/*/settings/local.py
+src/*/settings/local_settings.py
