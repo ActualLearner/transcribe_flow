@@ -1,6 +1,6 @@
 # Architecture Overview
 
-This document describes the high-level architecture of TranscribeFlow, following the principles from *Fundamentals of Software Architecture*.
+This document describes the high-level architecture of TranscribeFlow, following the principles from _Fundamentals of Software Architecture_.
 
 ## Architectural Characteristics (Ilities)
 
@@ -18,7 +18,7 @@ TranscribeFlow is designed as a **Modular Monolith**. This style provides the si
 
 ### Logical Layers (Hexagonal Architecture)
 
-Within each module, we follow the **Hexagonal (Ports and Adapters)** pattern as described in *Cosmic Python*:
+Within each module, we follow the **Hexagonal (Ports and Adapters)** pattern as described in _Cosmic Python_:
 
 - **Domain Model**: Pure business logic (transcription segments, editing rules).
 - **Service Layer (Use Cases)**: Coordinates tasks and defines the "API" of the domain.
