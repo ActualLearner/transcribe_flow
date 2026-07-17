@@ -1,45 +1,80 @@
 # API Specification
 
-This document outlines the internal API between the frontend and the backend modules.
+REST API between the SPA and the backend. Base path: `/api`. JSON request/response unless noted. No authentication (see PRD — anonymous access by unguessable UUID).
 
-## Transcription Module
+## Conventions
 
-### POST /api/transcribe
+- IDs are UUIDs.
+- Errors return `{ "detail": "human-readable message" }` (DRF style) with the status codes listed per endpoint.
+- `status` is one of: `pending`, `processing`, `completed`, `failed`.
 
-- **Description**: Upload a file for transcription.
-- **Request**: Multipart form-data (file: .mp3, .mp4, .wav).
-- **Response**:
-  - `202 Accepted`
-  - Body: `{ "task_id": "uuid", "status": "processing" }`
+## Transcriptions
 
-### GET /api/transcribe/{task_id}
+### POST /api/transcriptions/
 
-- **Description**: Check the status of a transcription task.
-- **Response**:
-  - `200 OK`
-  - Body: `{ "status": "completed", "transcript": { "segments": [...] } }`
-  - Body (Error): `{ "status": "failed", "error": "Reason" }`
+Upload a media file and start a transcription job (ADR-007).
 
-## Editor Module
+- **Request**: `multipart/form-data`, field `file` (`.mp3`, `.wav`, `.mp4`, `.m4a`, ≤ 25MB).
+- **Response `202 Accepted`**:
+  ```json
+  { "id": "uuid", "status": "pending" }
+  ```
+- **Errors**: `400` (unsupported type / too large / missing file), `429` (provider rate limit reached).
 
-### PUT /api/transcribe/{transcription_id}/segments/{segment_id}
+### GET /api/transcriptions/{id}/
 
-- **Description**: Update the text of a specific segment.
-- **Request**: `{ "text": "New text" }`
-- **Response**: `200 OK`
+Poll status and fetch the full resource. The SPA polls this (~1.5s) until a terminal status.
 
-## Summary Module
+- **Response `200 OK`**:
+  ```json
+  {
+    "id": "uuid",
+    "status": "completed",
+    "original_filename": "meeting.mp3",
+    "duration": 182.4,
+    "segments": [
+      { "id": "uuid", "start_time": 0.0, "end_time": 4.2, "text": "Hello and welcome." }
+    ],
+    "summary": null,
+    "error_message": null,
+    "created_at": "2026-07-17T12:00:00Z"
+  }
+  ```
+  While `pending`/`processing`: `segments` is `[]`, `duration`/`summary` are `null`.
+  When `failed`: `error_message` is set.
+- **Errors**: `404`.
 
-### POST /api/transcribe/{transcription_id}/summarize
+## Segments
 
-- **Description**: Generate an AI summary.
-- **Response**:
-  - `200 OK`
-  - Body: `{ "summary": "..." }`
+### PATCH /api/segments/{id}/
 
-## Export Module
+Update the text of one segment (FR3).
 
-### GET /api/transcribe/{transcription_id}/export?format={txt|srt}
+- **Request**: `{ "text": "Corrected text" }`
+- **Response `200 OK`**: the updated segment object.
+- **Errors**: `400` (empty/missing text), `404`.
 
-- **Description**: Download the transcript in the requested format.
-- **Response**: File download.
+## Summary
+
+### POST /api/transcriptions/{id}/summarize/
+
+Generate (or regenerate) the AI summary from current segment text. Synchronous — the LLM call completes within the request.
+
+- **Response `200 OK`**: `{ "summary": "..." }`
+- **Errors**: `404`, `409` (transcription not `completed`), `429` (provider rate limit), `502` (provider failure).
+
+## Export
+
+### GET /api/transcriptions/{id}/export/?format={txt|srt}
+
+Download the transcript (FR4). Reflects current (edited) segment text.
+
+- **Response `200 OK`**: file attachment.
+  - `txt`: `text/plain`, segment texts joined with newlines, no timestamps.
+  - `srt`: `application/x-subrip`, numbered cues, `HH:MM:SS,mmm --> HH:MM:SS,mmm`.
+  - `Content-Disposition: attachment; filename="<original_stem>.<ext>"`.
+- **Errors**: `400` (unknown format), `404`, `409` (not `completed`).
+
+## SPA Serving
+
+All non-`/api`, non-`/admin`, non-`/static` GET routes return the SPA's `index.html` (ADR-009).

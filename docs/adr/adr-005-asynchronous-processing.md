@@ -1,7 +1,7 @@
 # ADR-005: Asynchronous Processing for Transcription
 
 Date: 2026-01-02
-Status: Accepted
+Status: Accepted — mechanism refined by [ADR-007](./adr-007-async-lite-execution.md) (in-process ThreadPoolExecutor + DB-backed polling; Celery/Redis and WebSockets/SSE explicitly rejected for the free-tier deployment)
 
 ## Context
 

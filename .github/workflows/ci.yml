@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Lint (ruff)
+        run: |
+          ruff check src
+          ruff format --check src
+      - name: Test (pytest)
+        run: pytest
+        env:
+          SECRET_KEY: ci-secret-key
+          TRANSCRIPTION_PROVIDER: fake
+          SUMMARY_PROVIDER: fake
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check frontend exists
+        id: exists
+        run: '[ -f frontend/package.json ] && echo "yes=true" >> "$GITHUB_OUTPUT" || echo "yes=false" >> "$GITHUB_OUTPUT"'
+      - uses: actions/setup-node@v4
+        if: steps.exists.outputs.yes == 'true'
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        if: steps.exists.outputs.yes == 'true'
+        working-directory: frontend
+        run: npm ci
+      - name: Type check
+        if: steps.exists.outputs.yes == 'true'
+        working-directory: frontend
+        run: npx tsc --noEmit
+      - name: Test (vitest)
+        if: steps.exists.outputs.yes == 'true'
+        working-directory: frontend
+        run: npm test -- --run
+      - name: Build
+        if: steps.exists.outputs.yes == 'true'
+        working-directory: frontend
+        run: npm run build

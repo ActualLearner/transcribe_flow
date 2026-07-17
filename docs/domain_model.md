@@ -13,10 +13,13 @@ This document outlines the core domain concepts of TranscribeFlow, following the
 ## Entities and Value Objects
 
 ### Transcription (Aggregate Root)
-- `id`: Unique identifier.
-- `status`: (Uploading, Transcribing, Ready, Error).
-- `transcript`: A `Transcript` object.
-- `summary`: A `Summary` object (optional).
+- `id`: Unique identifier (UUID).
+- `status`: (`pending`, `processing`, `completed`, `failed`).
+- `original_filename`: Display name of the uploaded file (the file itself is never persisted — NFR2.1).
+- `duration`: Media length in seconds (set on completion).
+- `transcript`: A `Transcript` (the segment collection).
+- `summary`: AI summary text (optional; set on demand).
+- `error_message`: Human-readable failure reason (set only when `failed`).
 
 ### Segment (Value Object / Entity)
 - `id`: Unique identifier.
@@ -40,7 +43,15 @@ Although NFR2.1 states files should be discarded, we need a way to store the *st
 
 ## Service Layer (Use Cases)
 
-- `transcribe_file(file_path)`
-- `update_segment_text(transcription_id, segment_id, new_text)`
-- `generate_summary(transcription_id)`
-- `get_export_data(transcription_id, format)`
+- `start_transcription(file, filename)` → creates the aggregate (`pending`) and schedules the job.
+- `run_transcription_job(transcription_id, file_bytes, filename)` → calls the `TranscriptionProvider` port, persists segments, transitions status.
+- `update_segment_text(segment_id, new_text)`
+- `generate_summary(transcription_id)` → calls the `SummaryProvider` port with current (edited) transcript text.
+- `get_export_data(transcription_id, format)` → `txt` | `srt` via the Subtitle Formatter.
+
+## Provider Ports (ADR-003, ADR-006)
+
+- `TranscriptionProvider.transcribe(file, filename) -> TranscriptData`
+- `SummaryProvider.summarize(text) -> str`
+
+Concrete adapters: Groq (production), Fake (dev/tests). Adapters map provider responses to `TranscriptData`; no provider types leak past the port.

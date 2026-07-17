@@ -1,0 +1,29 @@
+# Render Blueprint (ADR-008). Deploy: dashboard → New → Blueprint → this repo.
+# Set GROQ_API_KEY and DATABASE_URL (Neon) in the Render dashboard.
+services:
+  - type: web
+    name: transcribeflow
+    runtime: python
+    plan: free
+    buildCommand: |
+      pip install -r requirements.txt
+      cd frontend && npm ci && npm run build && cd ..
+      python src/manage.py collectstatic --noinput
+    startCommand: |
+      python src/manage.py migrate --noinput
+      cd src && gunicorn config.wsgi:application --workers 1 --threads 8 --timeout 120
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.prod
+      - key: SECRET_KEY
+        generateValue: true
+      - key: TRANSCRIPTION_PROVIDER
+        value: groq
+      - key: SUMMARY_PROVIDER
+        value: groq
+      - key: GROQ_API_KEY
+        sync: false # set in dashboard
+      - key: DATABASE_URL
+        sync: false # Neon connection string, set in dashboard
+      - key: PYTHON_VERSION
+        value: 3.12.3

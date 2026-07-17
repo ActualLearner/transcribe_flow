@@ -1,0 +1,22 @@
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+src = ["src"]
+exclude = ["src/core/migrations", "venv", "frontend"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # bugbear
+    "UP",  # pyupgrade
+    "DJ",  # flake8-django
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.dev"
+pythonpath = ["src"]
+testpaths = ["src"]
+python_files = ["tests.py", "test_*.py"]

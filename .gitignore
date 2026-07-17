@@ -83,3 +83,10 @@ Thumbs.db
 # (exclude local settings overrides)
 src/*/settings/local.py
 src/*/settings/local_settings.py
+
+# Node / frontend
+node_modules/
+frontend/dist/
+
+# Agent scratch space (local tickets/notes)
+.scratch/
