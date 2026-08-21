@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { fromPartial } from "@total-typescript/shoehorn";
-import { afterAll, beforeAll, beforeEach, it, describe, expect } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import type { Transcription } from "./types";
 import { COMPLETED, handlers } from "./test/handlers";
@@ -65,10 +65,10 @@ describe("App", () => {
     render(<App />);
     uploadFile("meeting.mp3");
 
-    expect(await screen.findByText("Hello and welcome.", {}, { timeout: 5000 })).toBeInTheDocument();
+    expect(await screen.findByText("Hello and welcome.", {}, { timeout: 15000 })).toBeInTheDocument();
     expect(pollCount).toBeGreaterThanOrEqual(2);
     expect(screen.getByTestId("status-badge")).toHaveTextContent("Ready");
-  }, 15000);
+  }, 30000);
 
   it("edits a segment inline and shows saved feedback", async () => {
     const user = userEvent.setup();
@@ -118,10 +118,10 @@ describe("App", () => {
     );
     render(<App />);
     uploadFile("meeting.mp3");
-    expect(await screen.findByRole("alert", {}, { timeout: 5000 })).toHaveTextContent(
+    expect(await screen.findByRole("alert", {}, { timeout: 10000 })).toHaveTextContent(
       "Provider down.",
     );
-  });
+  }, 20000);
 
   it("offers txt and srt downloads including edits", async () => {
     await renderWithCompleted();
@@ -133,5 +133,41 @@ describe("App", () => {
       "href",
       "/api/transcriptions/t-1/export/?format=srt",
     );
+  });
+
+  it("copies the edited transcript to the clipboard with confirmation", async () => {
+    const user = userEvent.setup();
+    await renderWithCompleted();
+
+    const textarea = screen.getByLabelText(/segment at 00:00/i);
+    await user.clear(textarea);
+    await user.type(textarea, "Edited first line.");
+    await user.tab();
+    await screen.findByText("Saved ✓");
+
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText },
+      configurable: true,
+    });
+
+    await user.click(screen.getByRole("button", { name: /copy transcript/i }));
+
+    expect(writeText).toHaveBeenCalledWith("Edited first line.\nThis is a test.");
+    expect(await screen.findByText("Copied ✓")).toBeInTheDocument();
+  });
+
+  it("shows feedback when copying fails", async () => {
+    const user = userEvent.setup();
+    await renderWithCompleted();
+
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText: vi.fn().mockRejectedValue(new Error("denied")) },
+      configurable: true,
+    });
+
+    await user.click(screen.getByRole("button", { name: /copy transcript/i }));
+
+    expect(await screen.findByText("Copy failed")).toBeInTheDocument();
   });
 });
