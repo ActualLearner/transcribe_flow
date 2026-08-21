@@ -1,18 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 
+const outlineButton =
+  "rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100";
+
 interface ExportButtonsProps {
   transcriptionId: string;
   originalFilename: string;
-  transcriptText: string;
+  fullText: string;
 }
 
 export function ExportButtons({
   transcriptionId,
   originalFilename,
-  transcriptText,
+  fullText,
 }: ExportButtonsProps) {
   const baseName = originalFilename.replace(/\.[^.]+$/, "") || "transcript";
-  const [copied, setCopied] = useState(false);
+  const [copyState, setCopyState] = useState<"idle" | "copied" | "error">("idle");
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -22,10 +25,14 @@ export function ExportButtons({
   }, []);
 
   async function copyTranscript() {
-    await navigator.clipboard.writeText(transcriptText);
-    setCopied(true);
+    try {
+      await navigator.clipboard.writeText(fullText);
+      setCopyState("copied");
+    } catch {
+      setCopyState("error");
+    }
     if (resetTimer.current !== null) clearTimeout(resetTimer.current);
-    resetTimer.current = setTimeout(() => setCopied(false), 2000);
+    resetTimer.current = setTimeout(() => setCopyState("idle"), 2000);
   }
 
   return (
@@ -33,21 +40,24 @@ export function ExportButtons({
       <button
         type="button"
         onClick={() => void copyTranscript()}
-        className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+        aria-live="polite"
+        className={outlineButton}
       >
-        {copied ? "Copied ✓" : "Copy transcript"}
+        {copyState === "copied" && "Copied ✓"}
+        {copyState === "error" && "Copy failed"}
+        {copyState === "idle" && "Copy transcript"}
       </button>
       <a
         href={`/api/transcriptions/${transcriptionId}/export/?format=txt`}
         download={`${baseName}.txt`}
-        className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+        className={outlineButton}
       >
         Download .txt
       </a>
       <a
         href={`/api/transcriptions/${transcriptionId}/export/?format=srt`}
         download={`${baseName}.srt`}
-        className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+        className={outlineButton}
       >
         Download .srt
       </a>

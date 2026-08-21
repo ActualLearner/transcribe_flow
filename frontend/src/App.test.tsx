@@ -156,4 +156,18 @@ describe("App", () => {
     expect(writeText).toHaveBeenCalledWith("Edited first line.\nThis is a test.");
     expect(await screen.findByText("Copied ✓")).toBeInTheDocument();
   });
+
+  it("shows feedback when copying fails", async () => {
+    const user = userEvent.setup();
+    await renderWithCompleted();
+
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText: vi.fn().mockRejectedValue(new Error("denied")) },
+      configurable: true,
+    });
+
+    await user.click(screen.getByRole("button", { name: /copy transcript/i }));
+
+    expect(await screen.findByText("Copy failed")).toBeInTheDocument();
+  });
 });
