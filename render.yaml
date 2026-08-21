@@ -25,5 +25,9 @@ services:
         sync: false # set in dashboard
       - key: DATABASE_URL
         sync: false # Neon connection string, set in dashboard
+      - key: ALLOWED_HOSTS
+        value: transcribeflow.onrender.com # adjust to your assigned *.onrender.com domain
+      - key: ALLOWED_ORIGINS
+        value: https://transcribeflow.vercel.app # SPA origin for CORS
       - key: PYTHON_VERSION
         value: 3.12.3

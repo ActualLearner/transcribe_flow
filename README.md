@@ -2,7 +2,7 @@
 
 Free, no-signup audio/video transcription: upload a file, get a timestamped transcript in seconds, edit it inline, download as `.txt`/`.srt`, and generate a one-click AI summary. Uploaded media is **never stored** — it's streamed to the transcription provider and discarded.
 
-> **Live demo:** _(link coming after first deploy)_ — hosted on a free tier, so the first visit after idle takes ~30–60s to wake up.
+**Live demo:** [transcribeflow-one.vercel.app](https://transcribeflow-one.vercel.app) (SPA on Vercel) → API on [Render](https://transcribeflow-t2gy.onrender.com) free tier — first visit after idle takes ~30–60s to wake up.
 
 ## Why this project is interesting (the engineering story)
 
