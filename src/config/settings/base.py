@@ -125,7 +125,7 @@ GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 GROQ_TRANSCRIPTION_MODEL = os.environ.get(
     "GROQ_TRANSCRIPTION_MODEL", "whisper-large-v3-turbo"
 )
-GROQ_SUMMARY_MODEL = os.environ.get("GROQ_SUMMARY_MODEL", "llama-3.3-70b-versatile")
+GROQ_SUMMARY_MODEL = os.environ.get("GROQ_SUMMARY_MODEL", "openai/gpt-oss-120b")
 
 # --- Async-lite jobs (ADR-007) ---
 JOB_EXECUTOR_MAX_WORKERS = int(os.environ.get("JOB_EXECUTOR_MAX_WORKERS", "2"))
