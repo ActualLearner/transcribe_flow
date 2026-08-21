@@ -2,8 +2,6 @@ import uuid
 
 from django.db import models
 
-# Create your models here.
-
 
 class Status(models.TextChoices):
     PENDING = "pending", "Pending"
@@ -13,25 +11,20 @@ class Status(models.TextChoices):
 
 
 class Transcription(models.Model):
-
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     status = models.CharField(
         choices=Status.choices,
         default=Status.PENDING,
         max_length=10,
+        db_index=True,
     )
-    file = models.FileField(upload_to="uploads/$Y/$m/$d")
-    duration = models.FloatField(null=True)
-    summary = models.TextField(null=True, blank=True)
+    original_filename = models.CharField(max_length=255, blank=True, default="")
+    duration = models.FloatField(null=True, blank=True)
+    summary = models.TextField(null=True, blank=True)  # noqa: DJ001
+    error_message = models.TextField(blank=True, default="")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    @property
-    def text(self):
-        if not self.segments.exists():
-            return ""
-        return " ".join([s.text for s in self.segments.all()])
 
     class Meta:
         ordering = ["-created_at"]
@@ -41,6 +34,7 @@ class Transcription(models.Model):
 
 
 class Segment(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     transcription = models.ForeignKey(
         Transcription, on_delete=models.CASCADE, related_name="segments"
     )
@@ -54,5 +48,5 @@ class Segment(models.Model):
     class Meta:
         ordering = ["start_time"]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.start_time}-{self.end_time}: {self.text[:20]}..."
