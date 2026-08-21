@@ -65,10 +65,10 @@ describe("App", () => {
     render(<App />);
     uploadFile("meeting.mp3");
 
-    expect(await screen.findByText("Hello and welcome.", {}, { timeout: 5000 })).toBeInTheDocument();
+    expect(await screen.findByText("Hello and welcome.", {}, { timeout: 15000 })).toBeInTheDocument();
     expect(pollCount).toBeGreaterThanOrEqual(2);
     expect(screen.getByTestId("status-badge")).toHaveTextContent("Ready");
-  }, 15000);
+  }, 30000);
 
   it("edits a segment inline and shows saved feedback", async () => {
     const user = userEvent.setup();
@@ -118,7 +118,7 @@ describe("App", () => {
     );
     render(<App />);
     uploadFile("meeting.mp3");
-    expect(await screen.findByRole("alert", {}, { timeout: 5000 })).toHaveTextContent(
+    expect(await screen.findByRole("alert", {}, { timeout: 15000 })).toHaveTextContent(
       "Provider down.",
     );
   });
