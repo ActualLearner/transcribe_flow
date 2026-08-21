@@ -118,10 +118,10 @@ describe("App", () => {
     );
     render(<App />);
     uploadFile("meeting.mp3");
-    expect(await screen.findByRole("alert", {}, { timeout: 15000 })).toHaveTextContent(
+    expect(await screen.findByRole("alert", {}, { timeout: 10000 })).toHaveTextContent(
       "Provider down.",
     );
-  });
+  }, 20000);
 
   it("offers txt and srt downloads including edits", async () => {
     await renderWithCompleted();
