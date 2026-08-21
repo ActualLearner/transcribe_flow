@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { fromPartial } from "@total-typescript/shoehorn";
-import { afterAll, beforeAll, beforeEach, it, describe, expect } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import type { Transcription } from "./types";
 import { COMPLETED, handlers } from "./test/handlers";
@@ -133,5 +133,27 @@ describe("App", () => {
       "href",
       "/api/transcriptions/t-1/export/?format=srt",
     );
+  });
+
+  it("copies the edited transcript to the clipboard with confirmation", async () => {
+    const user = userEvent.setup();
+    await renderWithCompleted();
+
+    const textarea = screen.getByLabelText(/segment at 00:00/i);
+    await user.clear(textarea);
+    await user.type(textarea, "Edited first line.");
+    await user.tab();
+    await screen.findByText("Saved ✓");
+
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText },
+      configurable: true,
+    });
+
+    await user.click(screen.getByRole("button", { name: /copy transcript/i }));
+
+    expect(writeText).toHaveBeenCalledWith("Edited first line.\nThis is a test.");
+    expect(await screen.findByText("Copied ✓")).toBeInTheDocument();
   });
 });

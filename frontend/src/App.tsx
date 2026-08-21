@@ -91,6 +91,9 @@ export default function App() {
                 <ExportButtons
                   transcriptionId={transcription.id}
                   originalFilename={transcription.original_filename}
+                  transcriptText={transcription.segments
+                    .map((segment) => segment.text)
+                    .join("\n")}
                 />
               </div>
             </>
