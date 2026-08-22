@@ -170,4 +170,73 @@ describe("App", () => {
 
     expect(await screen.findByText("Copy failed")).toBeInTheDocument();
   });
+
+  it("filters segments case-insensitively as you type", async () => {
+    const user = userEvent.setup();
+    await renderWithCompleted();
+
+    await user.type(screen.getByLabelText(/search transcript/i), "WeLcOmE");
+
+    expect(screen.getByLabelText(/segment at 00:00/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/segment at 00:03/i)).not.toBeInTheDocument();
+  });
+
+  it("highlights matching substrings within filtered segments", async () => {
+    const user = userEvent.setup();
+    await renderWithCompleted();
+
+    await user.type(screen.getByLabelText(/search transcript/i), "welcome");
+
+    const marks = document.querySelectorAll("mark");
+    expect(marks).toHaveLength(1);
+    expect(marks[0]).toHaveTextContent(/welcome/i);
+    expect(marks[0].parentElement?.textContent).toBe("Hello and welcome.");
+  });
+
+  it("shows an explicit empty state when nothing matches", async () => {
+    const user = userEvent.setup();
+    await renderWithCompleted();
+
+    await user.type(screen.getByLabelText(/search transcript/i), "zzz-not-there");
+
+    expect(screen.getByText(/no segments match/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/segment at 00:00/i)).not.toBeInTheDocument();
+  });
+
+  it("persists edits made while filtered after clearing the filter", async () => {
+    const user = userEvent.setup();
+    await renderWithCompleted();
+
+    await user.type(screen.getByLabelText(/search transcript/i), "welcome");
+    await user.click(screen.getByRole("button", { name: /edit segment at 00:00/i }));
+
+    const textarea = screen.getByLabelText(/segment at 00:00/i);
+    await user.clear(textarea);
+    await user.type(textarea, "Changed while filtered.");
+    await user.tab();
+
+    expect(screen.getByText(/no segments match/i)).toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText(/search transcript/i));
+
+    expect(
+      await screen.findByDisplayValue("Changed while filtered.", {}, { timeout: 5000 }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/segment at 00:03/i)).toBeInTheDocument();
+  });
+
+  it("keeps the editor open when a filtered edit fails to save", async () => {
+    const user = userEvent.setup();
+    await renderWithCompleted();
+
+    await user.type(screen.getByLabelText(/search transcript/i), "welcome");
+    await user.click(screen.getByRole("button", { name: /edit segment at 00:00/i }));
+
+    const textarea = screen.getByLabelText(/segment at 00:00/i);
+    await user.clear(textarea);
+    await user.tab();
+
+    expect(await screen.findByText(/could not save/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/segment at 00:00/i)).toBeInTheDocument();
+  });
 });
