@@ -215,7 +215,6 @@ describe("App", () => {
     await user.type(textarea, "Changed while filtered.");
     await user.tab();
 
-    // The edited text no longer matches the query, so it filters out of view.
     expect(screen.getByText(/no segments match/i)).toBeInTheDocument();
 
     await user.clear(screen.getByLabelText(/search transcript/i));
@@ -224,5 +223,20 @@ describe("App", () => {
       await screen.findByDisplayValue("Changed while filtered.", {}, { timeout: 5000 }),
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/segment at 00:03/i)).toBeInTheDocument();
+  });
+
+  it("keeps the editor open when a filtered edit fails to save", async () => {
+    const user = userEvent.setup();
+    await renderWithCompleted();
+
+    await user.type(screen.getByLabelText(/search transcript/i), "welcome");
+    await user.click(screen.getByRole("button", { name: /edit segment at 00:00/i }));
+
+    const textarea = screen.getByLabelText(/segment at 00:00/i);
+    await user.clear(textarea);
+    await user.tab();
+
+    expect(await screen.findByText(/could not save/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/segment at 00:00/i)).toBeInTheDocument();
   });
 });

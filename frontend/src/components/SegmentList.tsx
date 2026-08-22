@@ -42,30 +42,31 @@ function SegmentRow({ segment, query, onSaved }: SegmentRowProps) {
     setText(segment.text);
   }, [segment.text]);
 
-  async function save() {
+  async function save(): Promise<boolean> {
     const trimmed = text.trim();
-    if (!trimmed || trimmed === segment.text) {
-      setText(segment.text);
-      return;
-    }
+    if (trimmed === segment.text) return true;
     setSaveState("saving");
     try {
       const updated = await updateSegmentText(segment.id, trimmed);
       onSaved(updated);
       setSaveState("saved");
+      return true;
     } catch {
       setSaveState("error");
+      return false;
     }
   }
 
-  const timestampLabel = `Segment at ${formatTimestamp(segment.start_time)}`;
+  const timestamp = formatTimestamp(segment.start_time);
+  const timestampLabel = `Segment at ${timestamp}`;
+  const timestampCell = (
+    <span className="mt-1 shrink-0 font-mono text-xs text-slate-400">{timestamp}</span>
+  );
 
   if (query && !editing) {
     return (
       <li className="flex gap-4 rounded-lg p-2">
-        <span className="mt-1 shrink-0 font-mono text-xs text-slate-400">
-          {formatTimestamp(segment.start_time)}
-        </span>
+        {timestampCell}
         <div className="flex-1">
           <button
             type="button"
@@ -83,9 +84,7 @@ function SegmentRow({ segment, query, onSaved }: SegmentRowProps) {
 
   return (
     <li className="group flex gap-4 rounded-lg p-2 hover:bg-slate-50">
-      <span className="mt-1 shrink-0 font-mono text-xs text-slate-400">
-        {formatTimestamp(segment.start_time)}
-      </span>
+      {timestampCell}
       <div className="flex-1">
         <textarea
           aria-label={timestampLabel}
@@ -95,9 +94,9 @@ function SegmentRow({ segment, query, onSaved }: SegmentRowProps) {
             setText(event.target.value);
             setSaveState("idle");
           }}
-          onBlur={() => {
-            void save();
-            if (query) setEditing(false);
+          onBlur={async () => {
+            const saved = await save();
+            if (query && saved) setEditing(false);
           }}
           onKeyDown={(event) => {
             if (event.key === "Enter" && !event.shiftKey) {
